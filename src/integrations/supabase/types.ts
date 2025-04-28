@@ -9,7 +9,94 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      leader_roles: {
+        Row: {
+          assigned_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leader_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          avatar: string | null
+          full_name: string
+          id: string
+          joined_at: string
+          role: string
+          verified: boolean | null
+        }
+        Insert: {
+          address?: string | null
+          avatar?: string | null
+          full_name: string
+          id: string
+          joined_at?: string
+          role: string
+          verified?: boolean | null
+        }
+        Update: {
+          address?: string | null
+          avatar?: string | null
+          full_name?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      service_categories: {
+        Row: {
+          assigned_at: string
+          category: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          category: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          category?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

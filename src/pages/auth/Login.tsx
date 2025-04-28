@@ -28,12 +28,12 @@ export default function Login() {
       });
       navigate("/");
     } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again",
+        description: "Invalid email or password. Please try again.",
         variant: "destructive",
       });
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
