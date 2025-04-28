@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole } from "../types/auth";
+import { User, UserRole, LeaderRole, ServiceCategory } from "../types/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -11,8 +11,8 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
-  isLeaderWithRole: (leaderRole: string) => boolean;
-  isServiceProviderWithCategory: (category: string) => boolean;
+  isLeaderWithRole: (leaderRole: LeaderRole) => boolean;
+  isServiceProviderWithCategory: (category: ServiceCategory) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -136,12 +136,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return userPermissions.includes(permission);
   };
 
-  const isLeaderWithRole = (leaderRole: string) => {
+  const isLeaderWithRole = (leaderRole: LeaderRole) => {
     if (!user || user.role !== 'leader') return false;
     return user.leaderRoles?.includes(leaderRole) || false;
   };
 
-  const isServiceProviderWithCategory = (category: string) => {
+  const isServiceProviderWithCategory = (category: ServiceCategory) => {
     if (!user || user.role !== 'service-provider') return false;
     return user.serviceCategories?.includes(category) || false;
   };
