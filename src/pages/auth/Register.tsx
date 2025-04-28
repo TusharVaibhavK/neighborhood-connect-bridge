@@ -46,17 +46,17 @@ export default function Register() {
     try {
       await signup(email, password, name, role);
       toast({
-        title: "Registration successful",
-        description: "Your account has been created. Please check your email to verify your account.",
+        title: "Account created",
+        description: "Your account has been created successfully!",
       });
       navigate("/");
     } catch (error) {
-      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: "There was an error creating your account. Please try again.",
+        description: "There was an error creating your account.",
         variant: "destructive",
       });
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

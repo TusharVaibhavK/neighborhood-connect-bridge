@@ -1,90 +1,71 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { User as SupabaseUser } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole } from "../types/auth";
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { User, UserRole, LeaderRole, ServiceCategory } from "../types/auth";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
   hasPermission: (permission: string) => boolean;
-  isLeaderWithRole: (leaderRole: string) => boolean;
-  isServiceProviderWithCategory: (category: string) => boolean;
+  isLeaderWithRole: (leaderRole: LeaderRole) => boolean;
+  isServiceProviderWithCategory: (category: ServiceCategory) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+// Mock users for demo purposes
+const mockUsers: User[] = [
+  {
+    id: "user1",
+    email: "resident@example.com",
+    name: "Alex Resident",
+    role: "resident",
+    verified: true,
+    joinedAt: new Date("2023-01-15"),
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
+  },
+  {
+    id: "user2",
+    email: "leader@example.com",
+    name: "Jordan Leader",
+    role: "leader",
+    leaderRoles: ["president", "treasurer"],
+    verified: true,
+    joinedAt: new Date("2022-11-05"),
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jordan"
+  },
+  {
+    id: "user3",
+    email: "provider@example.com",
+    name: "Casey Provider",
+    role: "service-provider",
+    serviceCategories: ["plumber", "handyman"],
+    verified: true,
+    joinedAt: new Date("2023-03-22"),
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Casey"
+  }
+];
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserProfile(session.user);
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        await fetchUserProfile(session.user);
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const fetchUserProfile = async (supabaseUser: SupabaseUser) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*, leader_roles(role), service_categories(category)')
-        .eq('id', supabaseUser.id)
-        .single();
-
-      if (error) throw error;
-
-      if (profile) {
-        const userData: User = {
-          id: profile.id,
-          email: supabaseUser.email!,
-          name: profile.full_name,
-          role: profile.role as UserRole,
-          verified: profile.verified,
-          joinedAt: new Date(profile.joined_at),
-          avatar: profile.avatar,
-          leaderRoles: profile.leader_roles?.map((lr: any) => lr.role),
-          serviceCategories: profile.service_categories?.map((sc: any) => sc.category),
-        };
-        setUser(userData);
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
+  const [isLoading, setIsLoading] = useState(false);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
+      // In a real app, this would be an API call
+      const foundUser = mockUsers.find(u => u.email === email);
+      
+      if (foundUser) {
+        console.log("User logged in:", foundUser);
+        setUser(foundUser);
+      } else {
+        throw new Error("Invalid credentials");
+      }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -94,38 +75,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signup = async (email: string, password: string, name: string, role: UserRole) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // In a real app, this would be an API call
+      const newUser: User = {
+        id: `user${mockUsers.length + 1}`,
         email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            role: role,
-          },
-        },
-      });
-      if (error) throw error;
+        name,
+        role,
+        verified: false, // Would require verification in real app
+        joinedAt: new Date(),
+      };
+      
+      console.log("User signed up:", newUser);
+      setUser(newUser);
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error("Signup error:", error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error) {
-      console.error('Logout error:', error);
-      throw error;
-    }
+  const logout = () => {
+    setUser(null);
   };
 
   const hasPermission = (permission: string) => {
     if (!user) return false;
 
+    // Simple permission check based on role
+    // In a real app, this would be more sophisticated
     const rolePermissions = {
       resident: ["view-tickets", "create-ticket", "view-events", "rsvp-events", "view-providers"],
       leader: ["view-tickets", "create-ticket", "assign-tickets", "view-events", "create-events", "manage-users", "view-providers"],
@@ -136,12 +114,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return userPermissions.includes(permission);
   };
 
-  const isLeaderWithRole = (leaderRole: string) => {
+  const isLeaderWithRole = (leaderRole: LeaderRole) => {
     if (!user || user.role !== 'leader') return false;
     return user.leaderRoles?.includes(leaderRole) || false;
   };
 
-  const isServiceProviderWithCategory = (category: string) => {
+  const isServiceProviderWithCategory = (category: ServiceCategory) => {
     if (!user || user.role !== 'service-provider') return false;
     return user.serviceCategories?.includes(category) || false;
   };
